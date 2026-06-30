@@ -47,4 +47,6 @@ func handleRequest(conn net.Conn) {
 
 	method, route, version := parts[0], parts[1], parts[2]
 
+	fmt.Printf("Method: %s ---- Route: %s ---- Version %s", method, route, version)
+
 }
