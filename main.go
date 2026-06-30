@@ -17,8 +17,6 @@ func main() {
 
 	defer conn.Close()
 
-	// Create a reader for responses that get sent back from the server.
-	// serverReader := bufio.NewReader(conn)
 	// Create a reader for the client to intake request from user.
 	reader := bufio.NewReader(os.Stdin)
 
@@ -34,5 +32,14 @@ func main() {
 		if error != nil {
 			log.Fatal(error)
 		}
+
+		// Read responses from the server.
+		buffer := make([]byte, 1024)
+		n, error := conn.Read(buffer)
+		if error != nil {
+			log.Fatal(error)
+		}
+		// Read the entire buffer.
+		fmt.Println(string(buffer[:n]))
 	}
 }

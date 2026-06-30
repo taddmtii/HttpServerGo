@@ -49,4 +49,19 @@ func handleRequest(conn net.Conn) {
 
 	fmt.Printf("Method: %s ---- Route: %s ---- Version %s", method, route, version)
 
+	if route == "/hello" {
+		handleHello(conn, method)
+	}
+}
+
+func handleHello(conn net.Conn, method string) {
+	n, err := conn.Write([]byte("Entered handleHello"))
+	fmt.Println("Bytes written:", n, "Error:", err)
+	if method == "GET" {
+		response := "HTTP/1.1 200 OK\n"
+		n, err := conn.Write([]byte(response))
+		fmt.Println("Bytes written:", n, "Error:", err)
+	} else {
+		conn.Write([]byte("This method is not supported at this endpoint."))
+	}
 }
