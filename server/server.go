@@ -28,6 +28,8 @@ func main() {
 			break
 		}
 
+		fmt.Println("Client has connected.")
+
 		go handleRequest(conn)
 	}
 }
@@ -42,25 +44,45 @@ func handleRequest(conn net.Conn) {
 	// Read the request line of the request.
 	// Example: GET /plans HTTP/1.1 \r\n
 	requestLine, _ := reader.ReadString('\n')
+	requestLineParts := strings.Split(requestLine, " ")
+	method, route, _ := strings.TrimSpace(requestLineParts[0]), strings.TrimSpace(requestLineParts[1]), strings.TrimSpace(requestLineParts[2])
 
-	parts := strings.Split(requestLine, " ")
+	headerMap := make(map[string]string)
 
-	method, route, version := parts[0], parts[1], parts[2]
+	for {
+		header, _ := reader.ReadString('\n')
+		if header == "\n" {
+			break
+		}
 
-	fmt.Printf("Method: %s ---- Route: %s ---- Version %s", method, route, version)
+		// Regular Expression that matches only strings with alpha characters)
+		// regex := regexp.Compile()
 
-	if route == "/hello" {
-		handleHello(conn, method)
+		headerParts := strings.Split(header, ":")
+		key, value := headerParts[0], headerParts[1]
+		_, exists := headerMap[key]
+
+		if !exists {
+			headerMap[key] = value
+		}
+	}
+
+	for key, value := range headerMap {
+		fmt.Printf("%s: %d\n", key, value)
+	}
+
+	if route == "/health" {
+		handleHealth(conn, method)
 	}
 }
 
-func handleHello(conn net.Conn, method string) {
-	n, err := conn.Write([]byte("Entered handleHello"))
-	fmt.Println("Bytes written:", n, "Error:", err)
+func handleHealth(conn net.Conn, method string) {
 	if method == "GET" {
 		response := "HTTP/1.1 200 OK\n"
-		n, err := conn.Write([]byte(response))
-		fmt.Println("Bytes written:", n, "Error:", err)
+		_, err := conn.Write([]byte(response))
+		if err != nil {
+			log.Fatal(err)
+		}
 	} else {
 		conn.Write([]byte("This method is not supported at this endpoint."))
 	}
