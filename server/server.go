@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"regexp"
 	"strings"
 )
 
@@ -55,20 +56,21 @@ func handleRequest(conn net.Conn) {
 			break
 		}
 
-		// Regular Expression that matches only strings with alpha characters)
-		// regex := regexp.Compile()
-
 		headerParts := strings.Split(header, ":")
 		key, value := headerParts[0], headerParts[1]
-		_, exists := headerMap[key]
 
-		if !exists {
+		// Regex to sanitize the string (alphanumeric)
+		key_is_valid := regexp.MustCompile(`^[a-zA-Z0-9]*$`).MatchString(key)
+		value_is_valid := regexp.MustCompile(`^[a-zA-Z0-9]*$`).MatchString(value)
+
+		_, exists := headerMap[key]
+		if !exists && key_is_valid && value_is_valid {
 			headerMap[key] = value
 		}
 	}
 
 	for key, value := range headerMap {
-		fmt.Printf("%s: %d\n", key, value)
+		fmt.Printf("%s: %s\n", key, value)
 	}
 
 	if route == "/health" {
