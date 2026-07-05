@@ -25,13 +25,13 @@ func main() {
 		// Accept each connection from the queue as it comes through.
 		conn, error := listener.Accept()
 		if error != nil {
-			log.Fatal(error)
-			break
+			log.Println("Error occured when accepting connection:", error)
+			continue
 		}
 
 		fmt.Println("Client has connected.")
-
 		go handleRequest(conn)
+
 	}
 }
 
@@ -44,20 +44,37 @@ func handleRequest(conn net.Conn) {
 
 	// Read the request line of the request.
 	// Example: GET /plans HTTP/1.1 \r\n
-	requestLine, _ := reader.ReadString('\n')
-	requestLineParts := strings.Split(requestLine, " ")
-	method, route, _ := strings.TrimSpace(requestLineParts[0]), strings.TrimSpace(requestLineParts[1]), strings.TrimSpace(requestLineParts[2])
+	requestLine, err := reader.ReadString('\n')
+	if err != nil {
+		return
+	}
+
+	// Split the request line into method, route, and HTTP version.
+	requestLineParts := strings.Fields(requestLine)
+	if len(requestLineParts) != 3 {
+		conn.Write([]byte("HTTP/1.1 400 Bad Request\r\n\r\n"))
+		return
+	}
+	method, route := strings.TrimSpace(requestLineParts[0]), strings.TrimSpace(requestLineParts[1])
 
 	headerMap := make(map[string]string)
 
 	for {
-		header, _ := reader.ReadString('\n')
-		if header == "\n" {
+		header, err := reader.ReadString('\n')
+		if err != nil {
+			return
+		}
+		header = strings.TrimSpace(header)
+
+		if header == "" {
 			break
 		}
 
-		headerParts := strings.Split(header, ":")
-		key, value := headerParts[0], headerParts[1]
+		headerParts := strings.SplitN(header, ":", 2)
+		if len(headerParts) != 2 {
+			continue
+		}
+		key, value := strings.TrimSpace(headerParts[0]), strings.TrimSpace(headerParts[1])
 
 		// Regex to sanitize the string (alphanumeric)
 		key_is_valid := regexp.MustCompile(`^[a-zA-Z0-9]*$`).MatchString(key)
@@ -80,12 +97,12 @@ func handleRequest(conn net.Conn) {
 
 func handleHealth(conn net.Conn, method string) {
 	if method == "GET" {
-		response := "HTTP/1.1 200 OK\n"
+		response := "HTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n"
 		_, err := conn.Write([]byte(response))
 		if err != nil {
-			log.Fatal(err)
+			log.Println("write error: ", err)
 		}
 	} else {
-		conn.Write([]byte("This method is not supported at this endpoint."))
+		conn.Write([]byte("HTTP/1.1 405 Method Not Allowed\r\n\r\n"))
 	}
 }
