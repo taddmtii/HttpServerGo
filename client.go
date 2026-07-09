@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
 	"log"
 	"net"
@@ -17,15 +16,13 @@ func main() {
 
 	defer conn.Close()
 
-	// Create a reader for the client to intake request from user.
-	reader := bufio.NewReader(os.Stdin)
+	request, err := os.ReadFile("requests/health.txt")
+	if err != nil {
+		fmt.Println("Error reading the request file:", err)
+	}
+	fmt.Println("Sending Request... ")
 
 	for {
-		fmt.Print("Request: ")
-		request, error := reader.ReadString('\n')
-		if error != nil {
-			break
-		}
 
 		// Write the request to the server.
 		_, error = conn.Write([]byte(request))

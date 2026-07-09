@@ -55,20 +55,23 @@ func handleRequest(conn net.Conn) {
 		conn.Write([]byte("HTTP/1.1 400 Bad Request\r\n\r\n"))
 		return
 	}
-	method, route := strings.TrimSpace(requestLineParts[0]), strings.TrimSpace(requestLineParts[1])
+	method, route, _ := strings.TrimSpace(requestLineParts[0]), strings.TrimSpace(requestLineParts[1]), strings.TrimSpace(requestLineParts[2])
 
+	// Next, read the headers line by line and put them in a map.
 	headerMap := make(map[string]string)
 
 	for {
 		header, err := reader.ReadString('\n')
-		if err != nil {
-			return
-		}
-		header = strings.TrimSpace(header)
 
+		if err != nil {
+			log.Fatal("Error when reading header...")
+		}
 		if header == "" {
+			fmt.Println("Header was blank, break out of loop.")
 			break
 		}
+
+		header = strings.TrimSpace(header)
 
 		headerParts := strings.SplitN(header, ":", 2)
 		if len(headerParts) != 2 {
@@ -77,11 +80,11 @@ func handleRequest(conn net.Conn) {
 		key, value := strings.TrimSpace(headerParts[0]), strings.TrimSpace(headerParts[1])
 
 		// Regex to sanitize the string (alphanumeric)
-		key_is_valid := regexp.MustCompile(`^[a-zA-Z0-9]*$`).MatchString(key)
-		value_is_valid := regexp.MustCompile(`^[a-zA-Z0-9]*$`).MatchString(value)
+		key_is_valid := regexp.MustCompile(`^[a-zA-Z0-9-]*$`).MatchString(key)
+		// value_is_valid := regexp.MustCompile(`^[a-zA-Z0-9]*$`).MatchString(value)
 
 		_, exists := headerMap[key]
-		if !exists && key_is_valid && value_is_valid {
+		if !exists && key_is_valid {
 			headerMap[key] = value
 		}
 	}
