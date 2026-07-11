@@ -7,6 +7,7 @@ import (
 	"net"
 	"regexp"
 	"strings"
+	"time"
 )
 
 func main() {
@@ -28,6 +29,8 @@ func main() {
 			log.Println("Error occured when accepting connection:", error)
 			continue
 		}
+		// After we acceot connection, make sure that if we do not hear back for 5 seconds give up.
+		conn.SetReadDeadline(time.Now().Add(5 * time.Second))
 
 		fmt.Println("Client has connected.")
 		go handleRequest(conn)
@@ -64,15 +67,14 @@ func handleRequest(conn net.Conn) {
 		header, err := reader.ReadString('\n')
 
 		if err != nil {
-			log.Fatal("Error when reading header...")
-		}
-		if header == "" {
-			fmt.Println("Header was blank, break out of loop.")
-			break
+			log.Println("Error when reading header...")
+			return
 		}
 
 		header = strings.TrimSpace(header)
-
+		if header == "" {
+			break
+		}
 		headerParts := strings.SplitN(header, ":", 2)
 		if len(headerParts) != 2 {
 			continue
@@ -87,10 +89,6 @@ func handleRequest(conn net.Conn) {
 		if !exists && key_is_valid {
 			headerMap[key] = value
 		}
-	}
-
-	for key, value := range headerMap {
-		fmt.Printf("%s: %s\n", key, value)
 	}
 
 	if route == "/health" {
