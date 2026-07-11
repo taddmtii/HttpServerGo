@@ -20,7 +20,9 @@ func main() {
 		"Host: localhost:8080\r\n" +
 		"User-Agent: Chrome\r\n" +
 		"Connection: keep-alive\r\n" +
-		"\r\n"
+		"Content-Length: 38\r\n" +
+		"\r\n" +
+		"{Id: 78912, Quantity: 1, Price: 18.00}"
 
 	// if err != nil {
 	// 	fmt.Println("Error reading the request file:", err)
