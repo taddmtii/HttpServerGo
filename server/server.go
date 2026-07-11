@@ -95,23 +95,20 @@ func handleRequest(conn net.Conn) {
 
 	// Body parsing logic
 
-	// if method != "GET" {
-	// Get content length number so we know how many bytes to allocate and read.
-	content_length, err := strconv.Atoi(headerMap["Content-Length"])
-	if err != nil {
-		log.Println("Content-Length value not found.")
+	if method != "GET" {
+		// Get content length number so we know how many bytes to allocate and read.
+		content_length, err := strconv.Atoi(headerMap["Content-Length"])
+		if err != nil {
+			log.Println("Content-Length value not found.")
+		}
+		// Allocate buffer for body content.
+		body_content := make([]byte, content_length)
+		// Only read up to the content_lengths number since bodys do not have a common delimiter.
+		n, err := io.ReadFull(reader, body_content)
+		if err != nil {
+			log.Println("Error reading bytes from reader into buffer.")
+		}
 	}
-	// Allocate buffer for body content.
-	body_content := make([]byte, content_length)
-	// Only read up to the content_lengths number since bodys do not have a common delimiter.
-	n, err := io.ReadFull(reader, body_content)
-	if err != nil {
-		log.Println("Error reading bytes from reader into buffer.")
-	}
-	log.Printf("Bytes read (should be 38): %d", n)
-	log.Println(body_content)
-
-	// }
 
 	if route == "/health" {
 		handleHealth(conn, method)
